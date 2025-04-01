@@ -4,9 +4,15 @@ import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cva } from "class-variance-authority";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Pencil } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { ColumnId } from "./KanbanBoard";
+//import { 
+//  Tooltip,
+//  TooltipContent,
+//  TooltipProvider,
+//  TooltipTrigger 
+//} from "@/components/ui/tooltip";
 
 export interface Task {
   id: UniqueIdentifier;
@@ -77,9 +83,15 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
           <span className="sr-only">Move task</span>
           <GripVertical />
         </Button>
-        <Badge variant={"outline"} className="ml-auto font-semibold">
-          Task
-        </Badge>
+        <div className="flex items-center ml-auto gap-2">
+          <Button variant={"outline"} size={"sm"}>
+            <Pencil className="h-4 w-4" />
+            <span className="sr-only">Edit</span>
+          </Button>
+          <Button variant={"outline"} size={"sm"}>
+            ...
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="px-3 pt-3 pb-6 text-left whitespace-pre-wrap">
         {task.content}
