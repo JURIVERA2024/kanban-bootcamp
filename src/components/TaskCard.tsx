@@ -5,14 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cva } from "class-variance-authority";
 import { GripVertical, Pencil } from "lucide-react";
-import { Badge } from "./ui/badge";
 import { ColumnId } from "./KanbanBoard";
-//import { 
-//  Tooltip,
-//  TooltipContent,
-//  TooltipProvider,
-//  TooltipTrigger 
-//} from "@/components/ui/tooltip";
 
 export interface Task {
   id: UniqueIdentifier;
