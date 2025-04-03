@@ -127,6 +127,9 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
     >
       <div className="flex gap-4 items-center flex-row justify-center">
         {children}
+        <Button variant={"outline"} size={"icon"}>
+          <Plus/>
+        </Button>
       </div>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>

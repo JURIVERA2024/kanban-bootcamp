@@ -5,7 +5,7 @@ interface KanbanContextType {
     tasks: string[];
 
     createTask: (columnId:string) => Promise<string | undefined>;
-    createColumn: ()=> Promise<string | undefined>;
+    createColumn: (title:string, color:string) => Promise<string | undefined>;
     deleteTask: (taskId:string) => void;
     deleteColumn: (columnId:string)=> void;
 
@@ -30,7 +30,7 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({children}) => {
         return Promise.resolve(undefined);
     }
 
-    const createColumn = () => {
+    const createColumn = (title:string, color:string, description?:string) => {
         return Promise.resolve(undefined);
     }
 
