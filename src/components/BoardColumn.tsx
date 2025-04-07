@@ -1,7 +1,7 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { useDndContext, type UniqueIdentifier } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Task, TaskCard } from "./TaskCard";
 import { cva } from "class-variance-authority";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -32,7 +32,6 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
   const tasksIds = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
-
   const {
     setNodeRef,
     attributes,
@@ -75,6 +74,7 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
     }
   );
 
+
   return (
     <Card
       ref={setNodeRef}
@@ -94,16 +94,16 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
           <GripVertical />
         </Button>
         {
-          column.title === "Done" ? <span className={`text-center ${progresColor["Done"]}`} > {column.title}</span> : 
-          column.title === "In progress" ? <span className={`text-center ${progresColor["In progress"]}`} > {column.title}</span> : 
-          column.title === "To do" ? <span className={`text-center ${progresColor["ToDo"]}`} > {column.title}</span> : 
-          <span className={`text-center`} > {column.title}</span>
-        } 
+          column.title === "Done" ? <span className={`text-center ${progresColor["Done"]}`} > {column.title}</span> :
+            column.title === "In progress" ? <span className={`text-center ${progresColor["In progress"]}`} > {column.title}</span> :
+              column.title === "To do" ? <span className={`text-center ${progresColor["ToDo"]}`} > {column.title}</span> :
+                <span className={`text-center`} > {column.title}</span>
+        }
         <Button
           variant={"outline"}
           className="h-6 py-0 px-0 w-6 text-center justify-center items-center cursor-pointer"
         >
-          <Plus/>
+          <Plus />
         </Button>
 
       </CardHeader>
@@ -133,7 +133,27 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
       },
     },
   });
+  const [isFormVisible, setIsFormVisible] = useState(false);
 
+  const handlePlusClick = () => {
+    setIsFormVisible(true);
+  }
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.id !== "columnCreationForm" &&
+        !event.target.closest("#columnCreationForm")
+      ) {
+        setIsFormVisible(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+  
   return (
     <div className="flex">
       <ScrollArea
@@ -143,14 +163,14 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
       >
         <div className="flex gap-4 items-center flex-row justify-center">
           {children}
-          <Button variant={"outline"} size={"icon"}>
-            <Plus/>
+          <Button variant={"outline"} size={"icon"} onClick={handlePlusClick}>
+            <Plus />
           </Button>
-          <MenuColumn visible={false}/>
+          <MenuColumn visible={isFormVisible} />
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
-      
+
     </div>
   );
 }
