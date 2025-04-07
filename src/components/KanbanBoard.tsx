@@ -21,6 +21,7 @@ import { type Task, TaskCard } from "./TaskCard";
 import type { Column } from "./BoardColumn";
 import { hasDraggableData } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
+import ColumnCreationForm from "./ui/form/ColumnCreationForm";
 const defaultCols = [
   {
     id: "todo" as const,
@@ -210,6 +211,8 @@ export function KanbanBoard() {
           </DragOverlay>,
           document.body
         )}
+
+        <ColumnCreationForm />
     </DndContext>
   );
 

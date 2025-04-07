@@ -4,8 +4,8 @@ import { Task } from "@/components/TaskCard"
 export interface TaskProps {
 	id: string
 	title: string
-	description: string
-	assignee: string
+	description?: string
+	assignee?: string
 	bg_color: string
 	status?: string
 	column_id: string
@@ -14,8 +14,9 @@ export interface TaskProps {
 export interface ColumnProps {
 	id: string
 	title: string
+	description?: string
 	color?: string
-	tasks: Task[]
+	tasks?: Task[]
 	kanban_id: string
 }
 
