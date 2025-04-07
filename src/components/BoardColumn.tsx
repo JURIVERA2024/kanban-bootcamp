@@ -103,7 +103,7 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
           variant={"outline"}
           className="h-6 py-0 px-0 w-6 text-center justify-center items-center cursor-pointer"
         >
-          <Plus />
+          <Plus/>
         </Button>
 
       </CardHeader>
@@ -161,9 +161,9 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
           dragging: dndContext.active ? "active" : "default",
         })}
       >
-        <div className="flex gap-4 items-center flex-row justify-center">
+        <div className="flex gap-4 justify-items-start flex-row ">
           {children}
-          <Button variant={"outline"} size={"icon"} onClick={handlePlusClick}>
+          <Button variant={"outline"} size={"icon"} onClick={handlePlusClick} className="h-8 py-0 px-0 w-8 text-center justify-center items-center cursor-pointer">
             <Plus />
           </Button>
           <MenuColumn visible={isFormVisible} />
