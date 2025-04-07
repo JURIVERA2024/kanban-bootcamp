@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import { GripVertical, Plus } from "lucide-react";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
+import { MenuColumn } from "./ui/menuColumn";
 
 export interface Column {
   id: UniqueIdentifier;
@@ -55,6 +56,12 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
     transform: CSS.Translate.toString(transform),
   };
 
+  const progresColor = {
+    "In progress": "text-yellow-400",
+    "Done": "text-green-400",
+    "ToDo": "text-red-400",
+  };
+
   const variants = cva(
     "h-[500px] max-h-[500px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center",
     {
@@ -86,13 +93,19 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
           <span className="sr-only">{`Move column: ${column.title}`}</span>
           <GripVertical />
         </Button>
-        <span className="text-center"> {column.title}</span>
+        {
+          column.title === "Done" ? <span className={`text-center ${progresColor["Done"]}`} > {column.title}</span> : 
+          column.title === "In progress" ? <span className={`text-center ${progresColor["In progress"]}`} > {column.title}</span> : 
+          column.title === "To do" ? <span className={`text-center ${progresColor["ToDo"]}`} > {column.title}</span> : 
+          <span className={`text-center`} > {column.title}</span>
+        } 
         <Button
           variant={"outline"}
           className="h-6 py-0 px-0 w-6 text-center justify-center items-center cursor-pointer"
         >
           <Plus/>
         </Button>
+
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
@@ -105,6 +118,8 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
       </ScrollArea>
     </Card>
   );
+
+
 }
 
 export function BoardContainer({ children }: { children: React.ReactNode }) {
@@ -120,18 +135,22 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <ScrollArea
-      className={variations({
-        dragging: dndContext.active ? "active" : "default",
-      })}
-    >
-      <div className="flex gap-4 items-center flex-row justify-center">
-        {children}
-        <Button variant={"outline"} size={"icon"}>
-          <Plus/>
-        </Button>
-      </div>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+    <div className="flex">
+      <ScrollArea
+        className={variations({
+          dragging: dndContext.active ? "active" : "default",
+        })}
+      >
+        <div className="flex gap-4 items-center flex-row justify-center">
+          {children}
+          <Button variant={"outline"} size={"icon"}>
+            <Plus/>
+          </Button>
+          <MenuColumn visible={false}/>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+      
+    </div>
   );
 }
