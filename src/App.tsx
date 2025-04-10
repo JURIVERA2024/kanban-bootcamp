@@ -4,6 +4,8 @@ import { KanbanBoard } from "./components/KanbanBoard";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { ThemeProvider } from "./components/theme-provider";
 import { Button } from "./components/ui/button";
+import KanbanContextProvider from "./context/kanbanContext";
+
 
 const FooterLink = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -17,10 +19,10 @@ const FooterLink = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-function App() {
+export default function App() {
   return (
-    <>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <KanbanContextProvider>
         <div className="min-h-screen flex flex-col">
           <header className="flex justify-between w-full flex-row p-4">
             <Button variant="link" asChild className="text-primary h-8 w-8 p-0">
@@ -33,6 +35,7 @@ function App() {
             </Button>
             <ThemeToggle />
           </header>
+
           <main className="mx-4 flex flex-col gap-6">
             <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
               Drag and Drop Kanban Board
@@ -42,6 +45,7 @@ function App() {
               With Keyboard Controls and Screen Reader interactions.
             </p>
           </main>
+
           <footer className="mt-6">
             <ul className="flex items-center justify-center">
               <li>
@@ -67,10 +71,7 @@ function App() {
             </ul>
           </footer>
         </div>
-      </ThemeProvider>
-    </>
+      </KanbanContextProvider>
+    </ThemeProvider>
   );
-
 }
-
-export default App;
