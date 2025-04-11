@@ -18,6 +18,7 @@ export interface ColumnProps {
 	color?: string
 	tasks?: Task[]
 	kanban_id: string
+	isVisible?: boolean
 }
 
 export interface KanbanProps {
