@@ -160,15 +160,15 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
   }, []);
   
   return (
-    <div className="flex">
+    <div className="flex justify-items-center justify-center">
       <ScrollArea
         className={variations({
           dragging: dndContext.active ? "active" : "default",
         })}
       >
-        <div className="flex gap-4 justify-items-start flex-row ">
+        <div className="flex gap-4 justify-items-start flex-row">
           {children}
-          <Button variant={"outline"} size={"icon"} onClick={handlePlusClick} className="h-8 py-0 px-0 w-8 text-center justify-center items-center cursor-pointer">
+          <Button variant={"outline"} size={"icon"} onClick={handlePlusClick} className="h-8 py-0 px-0 w-8  text-center justify-center items-center cursor-pointer">
             <Plus />
           </Button>
           <MenuColumn visible={isFormVisible} />
