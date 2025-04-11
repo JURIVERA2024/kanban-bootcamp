@@ -60,12 +60,10 @@ export function MenuColumn({ visible = true }: MenuColumnProps) {
       }}
       className="p-2 absolute top-2  right-14 bottom-0"
     >
-      <span className="flex flex-row items-center gap-1 w-full h-10 cursor-pointer  text-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 rounded-md p-1  hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 ">
-        <Plus size={16} color="gray" onClick={() => { setIsFormVisible(!isFormVisible) }} /> New column
+      <button onClick={() => { setIsFormVisible(!isFormVisible) }} className="flex flex-row items-center gap-1 w-full h-10 cursor-pointer  text-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 rounded-md p-1  hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 ">
+        <Plus size={16} color="gray"  /> New column
         {isFormVisible && <ColumnCreationForm className="absolute top-0 left-0"/>}
-
-
-      </span>
+      </button>
       <span className="border-b border-gray-400"></span>
       <span className="text-sm text-gray-500 dark:text-gray-400 cursor-info">
         visible Columns
