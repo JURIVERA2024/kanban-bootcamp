@@ -1,7 +1,10 @@
 import { useState } from "react";
 
+interface ColumnCreationFormProps {
+    className?: string;
+}
 
-const ColumnCreationForm = () => {
+const ColumnCreationForm = ({ className }: ColumnCreationFormProps) => {
     const [columnTitle, setColumnTitle] = useState('');
     const [columnColor, setColumnColor] = useState('bg-black');
     const [columnDescription, setColumnDescription] = useState('');
@@ -24,7 +27,7 @@ const ColumnCreationForm = () => {
     console.log(columnColor)
 
     return (
-        <form id="columnCreationDetailedForm" className="flex flex-col gap-2 container mx-auto bg-white p-4 rounded-md border-gray-300 border-2 max-w-[350px]">
+        <form id="columnCreationDetailedForm" className={`flex flex-col gap-2 container mx-auto bg-white p-4 rounded-md border-gray-300 border-2 max-w-[350px] ${className || ''}`}>
             <h1 className="text-1xl font-bold text-center">New Column</h1>
             <hr className="w-full border-gray-300 border-1" />
             <label htmlFor="columnTitle" className="text-start font-bold">Column title*</label>

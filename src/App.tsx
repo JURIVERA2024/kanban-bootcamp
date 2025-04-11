@@ -42,8 +42,8 @@ export default function App() {
             </h1>
             <KanbanBoard />
             <p className="leading-7 [&:not(:first-child)]:mt-6">
-              Solo los reales no comeran torta.
-            </p>
+              Solo los reales no comeran torta 🎂.
+            </p> 
           </main>
 
           <footer className="mt-6">
