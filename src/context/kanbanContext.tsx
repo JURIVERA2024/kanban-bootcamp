@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface KanbanContextType {
     columns: ColumnProps[];
     tasks: TaskProps[];
+    setColumns: (columns: ColumnProps[]) => void;
 
     createTask: (columnId:string, task:TaskProps) => void;
     createColumn: (column:ColumnProps) => void;
@@ -26,7 +27,7 @@ export const KanbanContext = createContext<KanbanContextType>({} as KanbanContex
 const KanbanContextProvider: React.FC<KanbanProviderProps> = ({children}) => {
     const [columns, setColumns] = useState<ColumnProps[]>([]);
     const [tasks, setTasks] = useState<TaskProps[]>([]);
-
+    console.log("columns", columns);
     const createTask = (columnId:string, task:TaskProps) => {
         const newTask = {
             id: uuidv4(),
@@ -42,10 +43,15 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({children}) => {
 
     const createColumn = async(column:ColumnProps) => {
         let color = column.color? column.color : 'text-black';
-        column.title && column.color ? column.title === 'To do' ?  color = 'text-red-400' :
-        column.title === 'In Progress' ? color = 'text-yellow-400' :
-        column.title === 'Done' ? color = 'text-green-400' :
-        color = 'text-black' : color = 'text-black';
+        if (column.title) {
+            if (column.title === 'To do') {
+                color = 'text-red-400';
+            } else if (column.title === 'In progress') {
+                color = 'text-yellow-400';
+            } else if (column.title === 'Done') {
+                color = 'text-green-400';
+            }
+        }
         
         const newColumn = {
             id: uuidv4(),
@@ -55,7 +61,10 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({children}) => {
             tasks: column.tasks? column.tasks : [],
             kanban_id: column.kanban_id
         }
-        setColumns([...columns, newColumn]);
+        
+        setColumns(prevColumns => [...prevColumns, newColumn]);
+        
+        return newColumn;
     }
 
     const deleteTask = (taskId:string) => {
@@ -84,6 +93,7 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({children}) => {
 
     const contextValue: KanbanContextType = {
         columns,
+        setColumns,
         tasks,
         createTask,
         createColumn,

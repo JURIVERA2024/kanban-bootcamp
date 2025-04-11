@@ -5,13 +5,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cva } from "class-variance-authority";
 import { GripVertical, Pencil } from "lucide-react";
-import { ColumnId } from "./KanbanBoard";
 import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 
 export interface Task {
 	id: UniqueIdentifier;
-	columnId: ColumnId;
+	columnId: UniqueIdentifier;
 	content: string;
 }
 
