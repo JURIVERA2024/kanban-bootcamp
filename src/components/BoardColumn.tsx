@@ -171,7 +171,7 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
           <Button variant={"outline"} size={"icon"} onClick={handlePlusClick} className="h-8 py-0 px-0 w-8  text-center justify-center items-center cursor-pointer">
             <Plus />
           </Button>
-          <MenuColumn visible={isFormVisible} />
+          <MenuColumn visible={isFormVisible}  />
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
