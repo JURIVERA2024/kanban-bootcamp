@@ -41,14 +41,14 @@ export default function App() {
               Equipo Backend 
             </h1>
             <KanbanBoard />
-            <p className="leading-7 [&:not(:first-child)]:mt-6">
+            {/* <p className="leading-7 [&:not(:first-child)]:mt-6">
               Solo los reales no comeran torta 🎂.
-            </p> 
+            </p>  */}
           </main>
 
           <footer className="mt-6">
             <ul className="flex items-center justify-center">
-              {/* <li>
+              <li>
                 <FooterLink>
                   <a href="https://react.dev/">React</a>
                 </FooterLink>
@@ -67,7 +67,7 @@ export default function App() {
                 <FooterLink>
                   <a href="https://ui.shadcn.com/">shadcn/ui</a>
                 </FooterLink>
-              </li> */}
+              </li>
             </ul>
           </footer>
         </div>
