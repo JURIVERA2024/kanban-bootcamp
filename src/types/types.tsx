@@ -19,6 +19,7 @@ export interface ColumnProps {
 	tasks?: Task[]
 	kanban_id: string
 	isVisible?: boolean
+	
 }
 
 export interface KanbanProps {

@@ -7,11 +7,17 @@ import { useState } from "react";
 // import { useEffect } from "react";
 
 const styleMenu = {
-  width: "160px",
-  height: "200px",
+  width: "200px",
+  height: "300px",
   display: "flex",
   flexDirection: "column" as const,
   alignItems: "left" as const,
+  overflow: "auto",
+  scrollbarWidth: "none" as any, // Firefox
+  msOverflowStyle: "none" as any, // IE/Edge
+  "&::-webkit-scrollbar": {
+    display: "none" // Chrome/Safari/Opera
+  }
 };
 
 type MenuColumnProps = {
@@ -56,19 +62,19 @@ export function MenuColumn({ visible = true }: MenuColumnProps) {
       id="columnCreationForm"
       style={{
         ...styleMenu,
-        display: visible ? "flex" : "none",
+        display: visible ? "flex" : "none"
       }}
-      className="p-2 absolute top-2  right-14 bottom-0"
+      className="p-2 absolute top-2  right-14 bottom-0 flex flex-col gap-2"
     >
-  <button
-    onClick={() => setIsFormVisible(!isFormVisible)}
-    className="flex flex-row items-center gap-1 w-full h-10 cursor-pointer text-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 rounded-md p-1 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
-  >
-    <Plus size={16} color="gray" />
-    New column
-  </button>
+      <button
+        onClick={() => setIsFormVisible(!isFormVisible)}
+        className="flex flex-row items-center gap-1 w-full h-10 cursor-pointer text-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 rounded-md p-1 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
+      >
+        <Plus size={16} color="gray" />
+        New column
+      </button>
 
-  <ColumnCreationForm open={isFormVisible} onOpenChange={setIsFormVisible} />
+      <ColumnCreationForm open={isFormVisible} onOpenChange={setIsFormVisible} />
 
       <span className="border-b border-gray-400"></span>
       <span className="text-sm text-gray-500 dark:text-gray-400 cursor-info">

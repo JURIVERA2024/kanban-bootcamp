@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { GripVertical, Plus } from "lucide-react";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { MenuColumn } from "./ui/menuColumn";
+import { ColumnProps } from "@/types/types";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -25,7 +26,7 @@ export interface ColumnDragData {
 }
 
 interface BoardColumnProps {
-  column: Column;
+  column: ColumnProps;
   tasks: Task[];
   isOverlay?: boolean;
   onTaskUpdate?: (updatedTask: Task) => void;
@@ -57,12 +58,6 @@ export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardCol
   const style = {
     transition,
     transform: CSS.Translate.toString(transform),
-  };
-
-  const progresColor = {
-    "In progress": "text-yellow-400",
-    "Done": "text-green-400",
-    "ToDo": "text-red-400",
   };
 
   const variants = cva(
@@ -114,10 +109,10 @@ export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardCol
           <GripVertical />
         </Button>
         {
-          column.title === "Done" ? <span className={`text-center ${progresColor["Done"]}`} > {column.title}</span> :
-            column.title === "In progress" ? <span className={`text-center ${progresColor["In progress"]}`} > {column.title}</span> :
-              column.title === "To do" ? <span className={`text-center ${progresColor["ToDo"]}`} > {column.title}</span> :
-                <span className={`text-center`} > {column.title}</span>
+          column.title === "Done" ? <span className={`text-center ${column.color}`} > {column.title}</span> :
+            column.title === "In progress" ? <span className={`text-center ${column.color}`} > {column.title}</span> :
+              column.title === "To do" ? <span className={`text-center ${column.color}`} > {column.title}</span> :
+                <span className={`text-center ${column.color}`} > {column.title}</span>
         }
         <Button
           variant={"outline"}

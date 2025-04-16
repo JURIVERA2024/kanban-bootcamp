@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-
+import { v4 as uuidv4 } from 'uuid';
 import { BoardColumn, BoardContainer } from "./BoardColumn";
 import {
 	DndContext,
@@ -18,47 +18,75 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { type Task, TaskCard } from "./TaskCard";
-import type { Column } from "./BoardColumn";
 import { hasDraggableData } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
-const defaultCols = [
-  {
-    id: "todo" as const,
-    title: "To do",
-  },
-  {
-    id: "in-progress" as const,
-    title: "In progress",
-  },
-  {
-    id: "done" as const,
-    title: "Done",
-  },
-] satisfies Column[];
+import { useKanbanContext } from "@/context/kanbanContext";
+import { ColumnProps } from "@/types/types";
 
-export type ColumnId = (typeof defaultCols)[number]["id"];
+
+
+
+export type ColumnId = string;
 
 const initialTasks: Task[] = [];
 
 export function KanbanBoard() {
-  const [columns, setColumns] = useState<Column[]>(defaultCols);
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const pickedUpTaskColumn = useRef<ColumnId | null>(null);
-  const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
-  const [activeColumn, setActiveColumn] = useState<Column | null>(null);
+	const {columns, setColumns, createColumn} = useKanbanContext();
+	console.log("columns", columns);
+	const pickedUpTaskColumn = useRef<ColumnId | null>(null);
+	const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
+	const [tasks, setTasks] = useState<Task[]>(initialTasks);
+	const hasInitializedColumns = useRef(false);
+	useEffect(() => {
+		// Solo inicializar si no hay columnas
+		if (columns.length === 0 && !hasInitializedColumns.current) {
+			hasInitializedColumns.current = true;
+			const initializeColumns = async () => {
+				await createColumn({
+					id: uuidv4(),
+					title: "To do",
+					description: "Tareas pendientes",
+					tasks: [],
+					kanban_id: "default-kanban"
+				});
+				
+				await createColumn({
+					id: uuidv4(),
+					title: "In progress",
+					description: "Tareas en progreso",
+					tasks: [],
+					kanban_id: "default-kanban"
+				});
+				
+				await createColumn({
+					id: uuidv4(),
+					title: "Done",
+					description: "Tareas completadas",
+					tasks: [],
+					kanban_id: "default-kanban"
+				});
+			};
+			
+			initializeColumns();
+		}
+	}, [columns, createColumn]);
+
+
+
+	const [activeColumn, setActiveColumn] = useState<ColumnProps | null>(null);
 
 	const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-  
 
-  const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: coordinateGetter,
-    })
-  );
+
+	const sensors = useSensors(
+		useSensor(MouseSensor),
+		useSensor(TouchSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: coordinateGetter,
+		})
+	);
 
 	function getDraggingTaskData(taskId: UniqueIdentifier, columnId: ColumnId) {
 		const tasksInColumn = tasks.filter((task) => task.columnId === columnId);
@@ -215,7 +243,7 @@ export function KanbanBoard() {
 		if (!hasDraggableData(event.active)) return;
 		const data = event.active.data.current;
 		if (data?.type === "Column") {
-			setActiveColumn(data.column);
+			setActiveColumn(data.column as ColumnProps);
 			return;
 		}
 
@@ -244,12 +272,10 @@ export function KanbanBoard() {
 		const isActiveAColumn = activeData?.type === "Column";
 		if (!isActiveAColumn) return;
 
-		setColumns((columns) => {
-			const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
-
-			const overColumnIndex = columns.findIndex((col) => col.id === overId);
-
-			return arrayMove(columns, activeColumnIndex, overColumnIndex);
+		setColumns((prevColumns: ColumnProps[]) => {
+			const activeColumnIndex = prevColumns.findIndex((col: ColumnProps) => col.id === activeId);
+			const overColumnIndex = prevColumns.findIndex((col: ColumnProps) => col.id === overId);
+			return arrayMove(prevColumns, activeColumnIndex, overColumnIndex);
 		});
 	}
 
