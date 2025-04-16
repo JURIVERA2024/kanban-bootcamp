@@ -9,6 +9,8 @@ import { Button } from "./ui/button";
 import { GripVertical, Plus } from "lucide-react";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { MenuColumn } from "./ui/menuColumn";
+import { EditTaskDialog } from "./EditTaskDialog";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface Column {
   id: UniqueIdentifier;
@@ -30,6 +32,7 @@ interface BoardColumnProps {
 }
 
 export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardColumnProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const tasksIds = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
@@ -75,6 +78,22 @@ export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardCol
     }
   );
 
+  const handlePlusClick = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleSave = (updatedTask: Task) => {
+    if (onTaskUpdate) {
+      onTaskUpdate(updatedTask);
+    }
+    setIsDialogOpen(false);
+  };
+
+  const newTask: Task = {
+    id: uuidv4(),
+    columnId: column.id,
+    content: "",
+  };
 
   return (
     <Card
@@ -103,10 +122,16 @@ export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardCol
         <Button
           variant={"outline"}
           className="h-6 py-0 px-0 w-6 text-center justify-center items-center cursor-pointer"
+          onClick={handlePlusClick}
         >
           <Plus/>
         </Button>
-
+        <EditTaskDialog
+          task={newTask}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          onSave={handleSave}
+        />
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
@@ -123,8 +148,6 @@ export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardCol
       </ScrollArea>
     </Card>
   );
-
-
 }
 
 export function BoardContainer({ children }: { children: React.ReactNode }) {

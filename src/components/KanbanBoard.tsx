@@ -38,17 +38,29 @@ const defaultCols = [
 
 export type ColumnId = (typeof defaultCols)[number]["id"];
 
-const initialTasks: Task[] = [];
-
+const initialTasks: Task[] = [
+  {
+    id: "task-1",
+    columnId: "todo",
+    content: "Example task 1",
+  },
+  {
+    id: "task-2",
+    columnId: "in-progress",
+    content: "Example task 2",
+  },
+  {
+    id: "task-3",
+    columnId: "done",
+    content: "Example task 3",
+  },
+];
 
 export function KanbanBoard() {
   const [columns, setColumns] = useState<Column[]>(defaultCols);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const pickedUpTaskColumn = useRef<ColumnId | null>(null);
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-
-
-  
 
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
 
@@ -160,9 +172,16 @@ export function KanbanBoard() {
 	};
 
 	const handleTaskUpdate = (updatedTask: Task) => {
-		setTasks(tasks.map(task =>
-			task.id === updatedTask.id ? updatedTask : task
-		));
+		setTasks(prevTasks => {
+			const taskExists = prevTasks.some(task => task.id === updatedTask.id);
+			if (taskExists) {
+				return prevTasks.map(task =>
+					task.id === updatedTask.id ? updatedTask : task
+				);
+			} else {
+				return [...prevTasks, updatedTask];
+			}
+		});
 	};
 
 	return (
