@@ -38,23 +38,7 @@ const defaultCols = [
 
 export type ColumnId = (typeof defaultCols)[number]["id"];
 
-const initialTasks: Task[] = [
-  {
-    id: "task-1",
-    columnId: "todo",
-    content: "Example task 1",
-  },
-  {
-    id: "task-2",
-    columnId: "in-progress",
-    content: "Example task 2",
-  },
-  {
-    id: "task-3",
-    columnId: "done",
-    content: "Example task 3",
-  },
-];
+const initialTasks: Task[] = [];
 
 export function KanbanBoard() {
   const [columns, setColumns] = useState<Column[]>(defaultCols);
