@@ -107,7 +107,7 @@ export function TaskCard({ task, isOverlay, onTaskUpdate }: TaskCardProps) {
 					</div>
 				</CardHeader>
 				<CardContent className="px-3 pt-3 pb-6 text-left whitespace-pre-wrap">
-					{task.content}
+					{task.title}
 				</CardContent>
 			</Card>
 
