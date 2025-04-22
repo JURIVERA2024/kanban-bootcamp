@@ -6,7 +6,7 @@ import { Task, TaskCard } from "./TaskCard";
 import { cva } from "class-variance-authority";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
-import { GripVertical, Plus } from "lucide-react";
+import { GripVertical, Plus, Circle } from "lucide-react";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { MenuColumn } from "./ui/menuColumn";
 import { ColumnProps } from "@/types/types";
@@ -108,18 +108,17 @@ export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardCol
           <span className="sr-only">{`Move column: ${column.title}`}</span>
           <GripVertical />
         </Button>
-        {
-          column.title === "Done" ? <span className={`text-center ${column.color}`} > {column.title}</span> :
-            column.title === "In progress" ? <span className={`text-center ${column.color}`} > {column.title}</span> :
-              column.title === "To do" ? <span className={`text-center ${column.color}`} > {column.title}</span> :
-                <span className={`text-center ${column.color}`} > {column.title}</span>
-        }
+
+        <div className="flex flex-row items-center justify-center gap-4">
+          <Circle className={`text-center ${column.color}`} />
+          <span className={`text-center`} > {column.title}</span>
+        </div>
         <Button
           variant={"outline"}
           className="h-6 py-0 px-0 w-6 text-center justify-center items-center cursor-pointer"
           onClick={handlePlusClick}
         >
-          <Plus/>
+          <Plus />
         </Button>
         <EditTaskDialog
           task={newTask}
@@ -135,7 +134,7 @@ export function BoardColumn({ column, tasks, isOverlay, onTaskUpdate }: BoardCol
               <TaskCard
                 key={task.id}
                 task={task}
-                onTaskUpdate={onTaskUpdate}  
+                onTaskUpdate={onTaskUpdate}
               />
             ))}
           </SortableContext>
@@ -176,7 +175,7 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
-  
+
   return (
     <div className="flex justify-items-center justify-center">
       <ScrollArea
@@ -189,7 +188,7 @@ export function BoardContainer({ children }: { children: React.ReactNode }) {
           <Button variant={"outline"} size={"icon"} onClick={handlePlusClick} className="h-8 py-0 px-0 w-8  text-center justify-center items-center cursor-pointer">
             <Plus />
           </Button>
-          <MenuColumn visible={isFormVisible}  />
+          <MenuColumn visible={isFormVisible} />
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
