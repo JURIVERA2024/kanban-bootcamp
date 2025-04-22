@@ -1,10 +1,8 @@
 import type { UniqueIdentifier } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { cva } from "class-variance-authority";
-import { GripVertical, Pencil } from "lucide-react";
 import { useState } from "react";
 import { EditTaskDialog } from "./EditTaskDialog";
 
@@ -42,6 +40,7 @@ export interface TaskDragData {
 
 export function TaskCard({ task, isOverlay, onTaskUpdate }: TaskCardProps) {
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+	const [isDragStarted, setIsDragStarted] = useState(false);
 
 	const {
 		setNodeRef,
@@ -66,7 +65,7 @@ export function TaskCard({ task, isOverlay, onTaskUpdate }: TaskCardProps) {
 		transform: CSS.Translate.toString(transform),
 	};
 
-	const variants = cva("", {
+	const variants = cva("cursor-grab active:cursor-grabbing", {
 		variants: {
 			dragging: {
 				over: "ring-2 opacity-30",
@@ -86,36 +85,23 @@ export function TaskCard({ task, isOverlay, onTaskUpdate }: TaskCardProps) {
 			<Card
 				ref={setNodeRef}
 				style={style}
+				{...attributes}
+				{...listeners}
 				className={variants({
 					dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
 				})}
 			>
-				<CardHeader className="px-3 py-3 space-between flex flex-row border-b-2 border-secondary relative">
-					<Button
-						variant={"ghost"}
-						{...attributes}
-						{...listeners}
-						className="p-1 text-secondary-foreground/50 -ml-2 h-auto cursor-grab"
+				<CardContent className="px-3 py-3 text-left whitespace-pre-wrap">
+					<button
+						className="inline-block hover:text-primary hover:underline hover:cursor-pointer transition-colors "
+						onClick={(e) => {
+							// Evitar que el click para editar interfiera con el drag
+							e.stopPropagation();
+							setIsEditDialogOpen(true);
+						}}
 					>
-						<span className="sr-only">Move task</span>
-						<GripVertical />
-					</Button>
-					<div className="flex items-center ml-auto gap-2">
-						<Button
-							variant={"outline"}
-							size={"sm"}
-							onClick={() => setIsEditDialogOpen(true)}	
-						>
-							<Pencil className="h-4 w-4" />
-							<span className="sr-only">Edit</span>
-						</Button>
-						<Button variant={"outline"} size={"sm"}>
-							...
-						</Button>
-					</div>
-				</CardHeader>
-				<CardContent className="px-3 pt-3 pb-6 text-left whitespace-pre-wrap">
-					{task.title}
+						{task.title}
+					</button>
 				</CardContent>
 			</Card>
 
