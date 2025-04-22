@@ -3,8 +3,8 @@ import { Task } from "./TaskCard";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "./ui/button";
 import { AlertCircle, CalendarIcon, Tags, Users, User, MessageSquare, GitBranch, Package, Plus, X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import ReactMarkdown from "react-markdown";
 
 interface EditTaskDialogProps {
     task: Task;
@@ -24,7 +24,6 @@ const sampleUsers = [
 const sampleProjects = ["Frontend", "Backend", "API", "Documentation", "DevOps"];
 
 export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDialogProps) {
-	const [content, setContent] = useState(task.content);
 	const [title, setTitle] = useState(task.title || "");
 	const [description, setDescription] = useState(task.description || "");
 	const [priority, setPriority] = useState(task.priority || "media");
@@ -35,6 +34,8 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 	const [project, setProject] = useState(task.project || "");
 	const [assignees, setAssignees] = useState(task.assignees || []);
 	const [comment, setComment] = useState("");
+	const [comments, setComments] = useState(task.comments || []);
+	const [editMode, setEditMode] = useState(!task.description);
 	
 	// Establecer creador si no existe
 	const creator = task.creator || sampleUsers[0];
@@ -42,7 +43,6 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 	const handleSave = () => {
 		onSave({
 			...task,
-			content,
 			title,
 			description,
 			priority,
@@ -53,6 +53,7 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 			assignees,
 			creator,
 			updatedAt: new Date().toISOString(),
+			comments
 		});
 		onOpenChange(false);
 	};
@@ -78,7 +79,7 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 	}
 
 	const addComment = () => {
-		if (!comment.trim() || !task.comments) return;
+		if (!comment.trim()) return;
 		
 		const newComment = {
 			id: Math.random().toString(),
@@ -87,11 +88,7 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 			createdAt: new Date().toISOString()
 		};
 		
-		onSave({
-			...task,
-			comments: [...(task.comments || []), newComment]
-		});
-		
+		setComments([...comments, newComment]);
 		setComment("");
 	}
 
@@ -132,43 +129,49 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 
 								{/* Descripción */}
 								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700">
-										Descripción
+									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+										<span>Descripción</span>
+										<Button 
+											variant="ghost" 
+											size="sm" 
+											onClick={() => setEditMode(!editMode)}
+											className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+										>
+											{editMode ? "Vista previa" : "Editar"}
+										</Button>
 									</div>
 									<div className="p-4">
-										<textarea
-											className="w-full min-h-[200px] p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white resize-y"
-											value={description}
-											onChange={(e) => setDescription(e.target.value)}
-											placeholder="Añade una descripción detallada..."
-										/>
-									</div>
-								</div>
-
-								{/* Contenido breve */}
-								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700">
-										Contenido breve
-									</div>
-									<div className="p-4">
-										<textarea
-											className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-											value={content}
-											onChange={(e) => setContent(e.target.value)}
-											placeholder="Contenido breve de la tarea"
-											rows={3}
-										/>
+										{editMode ? (
+											<textarea
+												className="w-full min-h-[200px] p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white resize-y font-mono text-sm"
+												value={description}
+												onChange={(e) => setDescription(e.target.value)}
+												placeholder="Añade una descripción detallada usando markdown..."
+											/>
+										) : (
+											<div className="prose dark:prose-invert max-w-none break-words">
+												{description ? (
+													<ReactMarkdown>
+														{description}
+													</ReactMarkdown>
+												) : (
+													<div className="text-gray-500 dark:text-gray-400 italic text-center py-10">
+														No hay descripción. Haz clic en "Editar" para añadir una.
+													</div>
+												)}
+											</div>
+										)}
 									</div>
 								</div>
 
 								{/* Comentarios */}
-								{task.comments && task.comments.length > 0 && (
-									<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-										<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700">
-											Comentarios ({task.comments.length})
-										</div>
+								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
+									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700">
+										Comentarios ({comments.length})
+									</div>
+									{comments.length > 0 && (
 										<div className="p-4 space-y-4">
-											{task.comments.map(comment => (
+											{comments.map(comment => (
 												<div key={comment.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0">
 													<div className="flex items-center gap-2 mb-2">
 														<Avatar className="h-6 w-6">
@@ -180,30 +183,36 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 															{new Date(comment.createdAt).toLocaleDateString()}
 														</span>
 													</div>
-													<p className="text-gray-700 dark:text-gray-300">{comment.content}</p>
+													<div className="pl-8 prose dark:prose-invert max-w-none text-sm">
+														<ReactMarkdown>
+															{comment.content}
+														</ReactMarkdown>
+													</div>
 												</div>
 											))}
 										</div>
-									</div>
-								)}
+									)}
 
-								{/* Añadir comentario */}
-								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700">
-										Añadir comentario
-									</div>
-									<div className="p-4">
-										<textarea
-											className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-											value={comment}
-											onChange={(e) => setComment(e.target.value)}
-											placeholder="Añade un comentario..."
-											rows={3}
-										/>
-										<div className="flex justify-end mt-2">
-											<Button onClick={addComment}>
-												Comentar
-											</Button>
+									{/* Añadir comentario */}
+									<div className="p-4 border-t border-gray-200 dark:border-gray-700">
+										<div className="flex items-start gap-2">
+											<Avatar className="h-8 w-8 mt-1">
+												<AvatarImage src={sampleUsers[0].avatar} alt={sampleUsers[0].name} />
+												<AvatarFallback>{sampleUsers[0].name.substring(0, 2)}</AvatarFallback>
+											</Avatar>
+											<div className="flex-1 border rounded-md border-gray-300 dark:border-gray-600 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+												<textarea
+													className="w-full p-3 rounded-md dark:bg-gray-700 dark:text-white min-h-[100px] text-sm font-mono focus:outline-none"
+													value={comment}
+													onChange={(e) => setComment(e.target.value)}
+													placeholder="Añade un comentario... (usa markdown para el formato)"
+												/>
+												<div className="border-t border-gray-300 dark:border-gray-600 p-2 flex justify-end">
+													<Button onClick={addComment}>
+														Comentar
+													</Button>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
