@@ -17,6 +17,14 @@ export interface Task {
 	priority?: string;
 	dueDate?: string;
 	tags?: string[];
+	assignees?: { id: string; name: string; avatar: string }[];
+	creator?: { id: string; name: string; avatar: string };
+	type?: "bug" | "feature" | "improvement" | "documentation" | "question";
+	project?: string;
+	participants?: { id: string; name: string; avatar: string }[];
+	createdAt?: string;
+	updatedAt?: string;
+	comments?: { id: string; author: { id: string; name: string; avatar: string }; content: string; createdAt: string }[];
 }
 
 interface TaskCardProps {
