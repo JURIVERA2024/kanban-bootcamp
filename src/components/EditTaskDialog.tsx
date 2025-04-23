@@ -56,6 +56,17 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 			comments
 		});
 		onOpenChange(false);
+		setTitle("");
+		setDescription("");
+		setPriority("media");
+		setDueDate("");
+		setTags([]);
+		setType("feature");
+		setProject("");
+		setAssignees([]);
+		setComment("");
+		setComments([]);
+		setEditMode(false);
 	};
 
 	const addTag = () => {

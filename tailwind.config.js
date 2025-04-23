@@ -90,7 +90,68 @@ module.exports = {
         "fadeIn": "fadeIn 0.2s ease-out",
         "fadeOut": "fadeOut 0.2s ease-out",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+            color: 'var(--tw-prose-body)',
+            'h1, h2, h3, h4, h5, h6': {
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+              fontWeight: '600',
+              lineHeight: '1.25',
+            },
+            'h1': { fontSize: '1.875em' },
+            'h2': { fontSize: '1.5em' },
+            'h3': { fontSize: '1.25em' },
+            'h4': { fontSize: '1.125em' },
+            'p, ul, ol, pre': {
+              marginTop: '1em',
+              marginBottom: '1em',
+            },
+            'ul, ol': {
+              paddingLeft: '1.5em',
+            },
+            'li': {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            'pre': {
+              backgroundColor: 'var(--tw-prose-pre-bg)',
+              padding: '1em',
+              borderRadius: '0.375em',
+              overflow: 'auto',
+            },
+            'code': {
+              fontSize: '0.875em',
+              fontWeight: '600',
+              padding: '0.25em',
+              backgroundColor: 'var(--tw-prose-pre-bg)',
+              borderRadius: '0.25em',
+            },
+            'blockquote': {
+              fontStyle: 'italic',
+              borderLeftWidth: '0.25em',
+              borderLeftColor: 'var(--tw-prose-quote-borders)',
+              paddingLeft: '1em',
+            },
+            'a': {
+              color: 'var(--tw-prose-links)',
+              textDecoration: 'underline',
+              fontWeight: '500',
+            },
+            'hr': {
+              borderColor: 'var(--tw-prose-hr)',
+              marginTop: '2em',
+              marginBottom: '2em',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require('@tailwindcss/typography'),
+  ],
 }
