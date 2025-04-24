@@ -24,7 +24,8 @@ const ColumnCreationForm = ({ className, open = false, onOpenChange }: ColumnCre
             description: columnDescription,
             color: columnColor,
             tasks: [],
-            kanban_id: "default-kanban"
+            kanban_id: "default-kanban",
+            isVisible: true
         });
         clearForm();
         onOpenChange?.(false);
@@ -50,6 +51,7 @@ const ColumnCreationForm = ({ className, open = false, onOpenChange }: ColumnCre
         setColumnTitle('');
         setColumnColor('');
         setColumnDescription('');
+        setTryCreate(false);
     }
 
     const isFormValid = () => {
@@ -73,8 +75,13 @@ const ColumnCreationForm = ({ className, open = false, onOpenChange }: ColumnCre
                             placeholder="Column title"
                             value={columnTitle}
                             className="border-2 border-gray-300 rounded-md p-2 mb-2 text-start dark:bg-gray-800"
-                            onChange={(e) => setColumnTitle(e.target.value)} />
-                        <span hidden={!isFormValid() && !tryCreate} className="text-red-500 text-sm p-0 mb-2">Column title is required</span>
+                            onChange={(e) => {
+                                setColumnTitle(e.target.value);
+                                if (e.target.value.trim() !== '') {
+                                    setTryCreate(false);
+                                }
+                            }} />
+                        <span hidden={!tryCreate || columnTitle.trim() !== ''} className="text-red-500 text-sm p-0 mb-2">Column title is required</span>
                         <label htmlFor="columnColor" className="text-start font-bold">Column color*</label>
                         <ul id="columnColorList" className="flex flex-row gap-2 mb-5 justify-center">
                             <li>
@@ -110,16 +117,27 @@ const ColumnCreationForm = ({ className, open = false, onOpenChange }: ColumnCre
                         <hr className="w-full border-gray-300 border-1" />
                         <div className="flex flex-row gap-2 justify-end items-center py-1">
                             <button className="bg-red-300 dark:bg-red-900 rounded-md p-2 text-center hover:bg-red-400 dark:hover:bg-red-800" onClick={(e) => { handleCancel(e) }}>Cancel</button>
-                            <button
-                                type="submit"
-                                className={`rounded-md p-2 text-center ${isFormValid()
-                                    ? 'bg-green-300 dark:bg-green-900 hover:bg-green-400 dark:hover:bg-green-800'
-                                    : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-50'
-                                    }`}
-                                disabled={!isFormValid()}
-                                onMouseEnter={() => setTryCreate(true)}
-                                onMouseOver={() => setTryCreate(true)}
-                            >Create</button>
+                            <div 
+                                onMouseEnter={() => {
+                                    if (!isFormValid()) {
+                                        setTryCreate(true);
+                                    }
+                                }}
+                                onMouseLeave={() => {
+                                    if (columnTitle.trim() !== '') {
+                                        setTryCreate(false);
+                                    }
+                                }}
+                            >
+                                <button
+                                    type="submit"
+                                    className={`rounded-md p-2 text-center ${isFormValid()
+                                        ? 'bg-green-300 dark:bg-green-900 hover:bg-green-400 dark:hover:bg-green-800'
+                                        : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-50'
+                                        }`}
+                                    disabled={!isFormValid()}
+                                >Create</button>
+                            </div>
                         </div>
 
                     </form>

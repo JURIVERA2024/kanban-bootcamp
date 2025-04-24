@@ -18,15 +18,16 @@ const styleColumn = {
     isVisible?: boolean;
   };
   
-  export function TagColumn({ title, color = "gray", isVisible = true }: TagColumnProps) {
-    if (!isVisible) return null;
-  
+  export function TagColumn({ title, color = "text-gray-500", isVisible = true }: TagColumnProps) {
     return (
       <span
         style={styleColumn}
-        className="cursor-pointer hover:text-blue-500 hover:bg-gray-100 dark:hover:text-blue-400 dark:hover:bg-gray-800 rounded-md p-1 transition-colors duration-200"
+        className={`flex-grow truncate ${isVisible 
+          ? "text-gray-700 dark:text-gray-300" 
+          : "text-gray-500 dark:text-gray-500 italic"} 
+        hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md p-1 transition-colors duration-200`}
       >
-        <Check size={14} color={color} /> {title}
+        <Check size={14} className={color} /> {title}
       </span>
     );
   }

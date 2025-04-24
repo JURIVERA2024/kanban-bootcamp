@@ -16,6 +16,7 @@ interface KanbanContextType {
     handleChangeColumnPosition: (columnId: string, newPosition: string) => void;
 
     handleChangeColumnColor: (columnId: string, color: string) => void;
+    updateColumn: (columnId: string, updates: Partial<ColumnProps>) => void;
 }
 
 interface KanbanProviderProps {
@@ -61,7 +62,8 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({ children }) => {
             description: column.description ? column.description : '',
             color: color,
             tasks: column.tasks ? column.tasks : [],
-            kanban_id: column.kanban_id
+            kanban_id: column.kanban_id,
+            isVisible: column.isVisible !== undefined ? column.isVisible : true
         }
 
         setColumns(prevColumns => [...prevColumns, newColumn]);
@@ -113,6 +115,16 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({ children }) => {
         );
     }
 
+    const updateColumn = (columnId: string, updates: Partial<ColumnProps>) => {
+        setColumns(prevColumns => 
+            prevColumns.map(column => 
+                column.id === columnId 
+                    ? { ...column, ...updates } 
+                    : column
+            )
+        );
+    }
+
     const editColumn = (columnId: string, title: string, description: string) => {
         setColumns(prevColumns => 
             prevColumns.map(column => 
@@ -134,7 +146,8 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({ children }) => {
         handleChangeTaskColumn,
         handleChangeTaskPosition,
         handleChangeColumnPosition,
-        handleChangeColumnColor
+        handleChangeColumnColor,
+        updateColumn
     }
 
     return <KanbanContext.Provider value={contextValue}>{children}</KanbanContext.Provider>;

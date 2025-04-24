@@ -35,7 +35,13 @@ export function KanbanBoard() {
 	const {columns, setColumns, createColumn} = useKanbanContext();
 	console.log("columns", columns);
 	const pickedUpTaskColumn = useRef<ColumnId | null>(null);
-	const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
+	
+	// Filtrar solo las columnas visibles
+	const visibleColumns = useMemo(() => columns.filter(col => col.isVisible !== false), [columns]);
+	
+	// Usar los IDs de las columnas visibles para el contexto sortable
+	const columnsId = useMemo(() => visibleColumns.map((col) => col.id), [visibleColumns]);
+	
 	const [tasks, setTasks] = useState<Task[]>(initialTasks);
 	const hasInitializedColumns = useRef(false);
 	useEffect(() => {
@@ -48,7 +54,8 @@ export function KanbanBoard() {
 					title: "To do",
 					description: "Tareas pendientes",
 					tasks: [],
-					kanban_id: "default-kanban"
+					kanban_id: "default-kanban",
+					isVisible: true
 				});
 				
 				await createColumn({
@@ -56,7 +63,8 @@ export function KanbanBoard() {
 					title: "In progress",
 					description: "Tareas en progreso",
 					tasks: [],
-					kanban_id: "default-kanban"
+					kanban_id: "default-kanban",
+					isVisible: true
 				});
 				
 				await createColumn({
@@ -64,7 +72,8 @@ export function KanbanBoard() {
 					title: "Done",
 					description: "Tareas completadas",
 					tasks: [],
-					kanban_id: "default-kanban"
+					kanban_id: "default-kanban",
+					isVisible: true
 				});
 			};
 			
@@ -208,7 +217,7 @@ export function KanbanBoard() {
 		>
 			<BoardContainer>
 				<SortableContext items={columnsId}>
-					{columns.map((col) => (
+					{visibleColumns.map((col) => (
 						<BoardColumn
 							key={col.id}
 							column={col}
@@ -243,7 +252,11 @@ export function KanbanBoard() {
 		if (!hasDraggableData(event.active)) return;
 		const data = event.active.data.current;
 		if (data?.type === "Column") {
-			setActiveColumn(data.column as ColumnProps);
+			// Solo permitir arrastrar columnas visibles
+			const column = data.column as ColumnProps;
+			if (column.isVisible !== false) {
+				setActiveColumn(column);
+			}
 			return;
 		}
 
@@ -273,9 +286,22 @@ export function KanbanBoard() {
 		if (!isActiveAColumn) return;
 
 		setColumns((prevColumns: ColumnProps[]) => {
-			const activeColumnIndex = prevColumns.findIndex((col: ColumnProps) => col.id === activeId);
-			const overColumnIndex = prevColumns.findIndex((col: ColumnProps) => col.id === overId);
-			return arrayMove(prevColumns, activeColumnIndex, overColumnIndex);
+			// Encontrar los índices solo dentro de las columnas visibles
+			const visibleColumnsArray = prevColumns.filter(col => col.isVisible !== false);
+			const activeVisibleIndex = visibleColumnsArray.findIndex((col: ColumnProps) => col.id === activeId);
+			const overVisibleIndex = visibleColumnsArray.findIndex((col: ColumnProps) => col.id === overId);
+			
+			// Encontrar los índices en todas las columnas
+			const activeRealIndex = prevColumns.findIndex((col: ColumnProps) => col.id === activeId);
+			const overRealIndex = prevColumns.findIndex((col: ColumnProps) => col.id === overId);
+			
+			// Crear una copia para manipular
+			const newColumns = [...prevColumns];
+			// Reordenar
+			const [movedColumn] = newColumns.splice(activeRealIndex, 1);
+			newColumns.splice(overRealIndex, 0, movedColumn);
+			
+			return newColumns;
 		});
 	}
 
@@ -310,8 +336,13 @@ export function KanbanBoard() {
 					overTask &&
 					activeTask.columnId !== overTask.columnId
 				) {
-					activeTask.columnId = overTask.columnId;
-					return arrayMove(tasks, activeIndex, overIndex - 1);
+					// Solo permitir mover a columnas visibles
+					const targetColumn = columns.find(col => col.id === overTask.columnId);
+					if (targetColumn && targetColumn.isVisible !== false) {
+						activeTask.columnId = overTask.columnId;
+						return arrayMove(tasks, activeIndex, overIndex - 1);
+					}
+					return tasks;
 				}
 
 				return arrayMove(tasks, activeIndex, overIndex);
@@ -325,7 +356,10 @@ export function KanbanBoard() {
 			setTasks((tasks) => {
 				const activeIndex = tasks.findIndex((t) => t.id === activeId);
 				const activeTask = tasks[activeIndex];
-				if (activeTask) {
+				
+				// Solo permitir mover a columnas visibles
+				const targetColumn = columns.find(col => col.id === overId);
+				if (activeTask && targetColumn && targetColumn.isVisible !== false) {
 					activeTask.columnId = overId as ColumnId;
 					return arrayMove(tasks, activeIndex, activeIndex);
 				}
