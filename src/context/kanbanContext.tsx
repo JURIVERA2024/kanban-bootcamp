@@ -47,9 +47,9 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({ children }) => {
         let color = column.color ? column.color : 'text-black';
         console.log("color", color);
         if (column.title) {
-            if (column.title === 'To do') {
+            if (column.title === 'To Do') {
                 color = 'text-red-400';
-            } else if (column.title === 'In progress') {
+            } else if (column.title === 'In Progress') {
                 color = 'text-yellow-400';
             } else if (column.title === 'Done') {
                 color = 'text-green-400';
@@ -57,7 +57,7 @@ const KanbanContextProvider: React.FC<KanbanProviderProps> = ({ children }) => {
         }
 
         const newColumn = {
-            id: uuidv4(),
+            id: column.id || uuidv4(),
             title: column.title,
             description: column.description ? column.description : '',
             color: color,

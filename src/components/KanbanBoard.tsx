@@ -18,22 +18,26 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { type Task, TaskCard } from "./TaskCard";
-import { hasDraggableData } from "./utils";
+import { hasDraggableData, convertToColumnProps } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
 import { useKanbanContext } from "@/context/kanbanContext";
 import { ColumnProps } from "@/types/types";
-
-
-
+import { 
+	loadBoardData, 
+	saveBoardData, 
+	addTask, 
+	updateTask, 
+	moveTask, 
+	deleteTask,
+	DEFAULT_COLUMN_IDS
+} from "@/data/taskStorage";
 
 export type ColumnId = string;
 
 const initialTasks: Task[] = [];
 
 export function KanbanBoard() {
-
 	const {columns, setColumns, createColumn} = useKanbanContext();
-	console.log("columns", columns);
 	const pickedUpTaskColumn = useRef<ColumnId | null>(null);
 	
 	// Filtrar solo las columnas visibles
@@ -44,50 +48,100 @@ export function KanbanBoard() {
 	
 	const [tasks, setTasks] = useState<Task[]>(initialTasks);
 	const hasInitializedColumns = useRef(false);
+
+	// Cargar datos guardados al iniciar
 	useEffect(() => {
-		// Solo inicializar si no hay columnas
-		if (columns.length === 0 && !hasInitializedColumns.current) {
+		if (hasInitializedColumns.current) return;
+		
+		// Cargar datos del almacenamiento
+		const savedData = loadBoardData();
+		
+		// Si tenemos columnas guardadas, utilizarlas directamente
+		if (savedData.columns.length > 0) {
+			// Convertir las columnas guardadas al formato requerido por el contexto
+			const mappedColumns: ColumnProps[] = savedData.columns.map(col => ({
+				id: col.id as string,
+				title: col.title,
+				description: col.title, // Usar título como descripción por defecto
+				tasks: [],
+				kanban_id: "default-kanban",
+				isVisible: true,
+				color: col.color // Asegurarse de pasar el color
+			}));
+			
+			// Establecer columnas en el contexto
+			setColumns(mappedColumns);
+			
+			// Extraer todas las tareas y establecerlas
+			const allTasks = savedData.columns.flatMap(col => 
+				col.tasks.map(task => ({
+					...task,
+					columnId: col.id 
+				}))
+			);
+			
+			setTasks(allTasks);
 			hasInitializedColumns.current = true;
+		} else {
+			// Si no hay datos guardados, inicializar columnas por defecto
 			const initializeColumns = async () => {
 				await createColumn({
-					id: uuidv4(),
-					title: "To do",
+					id: DEFAULT_COLUMN_IDS.PENDING,
+					title: "To Do",
 					description: "Tareas pendientes",
 					tasks: [],
 					kanban_id: "default-kanban",
-					isVisible: true
+					isVisible: true,
+					color: "text-red-400"
 				});
 				
 				await createColumn({
-					id: uuidv4(),
-					title: "In progress",
+					id: DEFAULT_COLUMN_IDS.IN_PROGRESS,
+					title: "In Progress",
 					description: "Tareas en progreso",
 					tasks: [],
 					kanban_id: "default-kanban",
-					isVisible: true
+					isVisible: true,
+					color: "text-yellow-400"
 				});
 				
 				await createColumn({
-					id: uuidv4(),
+					id: DEFAULT_COLUMN_IDS.COMPLETED,
 					title: "Done",
 					description: "Tareas completadas",
 					tasks: [],
 					kanban_id: "default-kanban",
-					isVisible: true
+					isVisible: true,
+					color: "text-green-400"
 				});
+				
+				hasInitializedColumns.current = true;
 			};
 			
 			initializeColumns();
 		}
-	}, [columns, createColumn]);
+	}, [setColumns, createColumn]);
 
-
+	// Guardar cambios cuando se actualicen las tareas o columnas
+	useEffect(() => {
+		if (tasks.length > 0 || columns.length > 0) {
+			// Preparar datos para guardar
+			const columnsWithTasks = columns.map(col => {
+				const columnTasks = tasks.filter(task => task.columnId === col.id);
+				return {
+					id: col.id,
+					title: col.title,
+					tasks: columnTasks,
+					color: col.color // Añadir color al guardar
+				};
+			});
+			
+			saveBoardData({ columns: columnsWithTasks });
+		}
+	}, [tasks, columns]);
 
 	const [activeColumn, setActiveColumn] = useState<ColumnProps | null>(null);
-
 	const [activeTask, setActiveTask] = useState<Task | null>(null);
-
-
 
 	const sensors = useSensors(
 		useSensor(MouseSensor),
@@ -196,11 +250,19 @@ export function KanbanBoard() {
 		setTasks(prevTasks => {
 			const taskExists = prevTasks.some(task => task.id === updatedTask.id);
 			if (taskExists) {
-				return prevTasks.map(task =>
+				// Update existing task
+				const newTasks = prevTasks.map(task =>
 					task.id === updatedTask.id ? updatedTask : task
 				);
+				// Actualizar en almacenamiento
+				updateTask(updatedTask);
+				return newTasks;
 			} else {
-				return [...prevTasks, updatedTask];
+				// Add new task
+				const newTasks = [...prevTasks, updatedTask];
+				// Añadir en almacenamiento
+				addTask(updatedTask.columnId, updatedTask);
+				return newTasks;
 			}
 		});
 	};
@@ -252,11 +314,7 @@ export function KanbanBoard() {
 		if (!hasDraggableData(event.active)) return;
 		const data = event.active.data.current;
 		if (data?.type === "Column") {
-			// Solo permitir arrastrar columnas visibles
-			const column = data.column as ColumnProps;
-			if (column.isVisible !== false) {
-				setActiveColumn(column);
-			}
+			setActiveColumn(convertToColumnProps(data.column));
 			return;
 		}
 
@@ -278,31 +336,128 @@ export function KanbanBoard() {
 
 		if (!hasDraggableData(active)) return;
 
-		const activeData = active.data.current;
+		// Manejar cambio de columnas
+		if (
+			active.data.current?.type === "Column" &&
+			over.data.current?.type === "Column" &&
+			activeId !== overId
+		) {
+			const activeColumnIndex = columnsId.findIndex((id) => id === activeId);
+			const overColumnIndex = columnsId.findIndex((id) => id === overId);
+			// Actualizar el orden de las columnas
+			const updatedColumns = arrayMove(
+				columns,
+				activeColumnIndex,
+				overColumnIndex
+			);
+			setColumns(updatedColumns);
 
-		if (activeId === overId) return;
+			// Guardar el nuevo orden de columnas
+			const columnsWithTasks = updatedColumns.map(col => {
+				const columnTasks = tasks.filter(task => task.columnId === col.id);
+				return {
+					id: col.id,
+					title: col.title,
+					tasks: columnTasks
+				};
+			});
+			
+			saveBoardData({ columns: columnsWithTasks });
+		}
 
-		const isActiveAColumn = activeData?.type === "Column";
-		if (!isActiveAColumn) return;
+		// Manejar cambio de tareas
+		if (
+			active.data.current?.type === "Task" &&
+			over.data.current?.type === "Task"
+		) {
+			const activeTaskId = activeId;
+			const activeColumnId = active.data.current.task.columnId;
+			const overTaskId = overId;
+			const overColumnId = over.data.current.task.columnId;
+			
+			// Si la tarea se movió a otra columna
+			if (activeColumnId !== overColumnId) {
+				// Obtenemos todas las tareas de la columna de origen
+				const startTasksInColumn = tasks.filter(
+					(task) => task.columnId === activeColumnId
+				);
+				// Eliminamos la tarea de la columna de origen
+				const newStartTasksInColumn = startTasksInColumn.filter(
+					(task) => task.id !== activeTaskId
+				);
+				
+				// Obtenemos todas las tareas de la columna de destino
+				const finishTasksInColumn = tasks.filter(
+					(task) => task.columnId === overColumnId
+				);
+				
+				// Encontramos la posición de la tarea sobre la que se soltó
+				const overTaskIndex = finishTasksInColumn.findIndex(
+					(task) => task.id === overTaskId
+				);
 
-		setColumns((prevColumns: ColumnProps[]) => {
-			// Encontrar los índices solo dentro de las columnas visibles
-			const visibleColumnsArray = prevColumns.filter(col => col.isVisible !== false);
-			const activeVisibleIndex = visibleColumnsArray.findIndex((col: ColumnProps) => col.id === activeId);
-			const overVisibleIndex = visibleColumnsArray.findIndex((col: ColumnProps) => col.id === overId);
-			
-			// Encontrar los índices en todas las columnas
-			const activeRealIndex = prevColumns.findIndex((col: ColumnProps) => col.id === activeId);
-			const overRealIndex = prevColumns.findIndex((col: ColumnProps) => col.id === overId);
-			
-			// Crear una copia para manipular
-			const newColumns = [...prevColumns];
-			// Reordenar
-			const [movedColumn] = newColumns.splice(activeRealIndex, 1);
-			newColumns.splice(overRealIndex, 0, movedColumn);
-			
-			return newColumns;
-		});
+				// Creamos la nueva tarea con el nuevo columnId
+				const updatedTask = {
+					...tasks.find((task) => task.id === activeTaskId)!,
+					columnId: overColumnId,
+				};
+				
+				// Insertamos la tarea en la columna de destino
+				finishTasksInColumn.splice(overTaskIndex, 0, updatedTask);
+				
+				// Actualizamos el estado de tareas
+				const newTasks = tasks.filter(
+					(task) =>
+						task.columnId !== activeColumnId && task.columnId !== overColumnId
+				);
+				
+				setTasks([
+					...newTasks,
+					...newStartTasksInColumn,
+					...finishTasksInColumn,
+				]);
+				
+				// Actualizar en el almacenamiento
+				moveTask(activeTaskId, activeColumnId, overColumnId);
+			} else {
+				// Si la tarea se movió dentro de la misma columna
+				const tasksInColumn = tasks.filter(
+					(task) => task.columnId === activeColumnId
+				);
+				
+				const activeIndex = tasksInColumn.findIndex(
+					(task) => task.id === activeId
+				);
+				const overIndex = tasksInColumn.findIndex(
+					(task) => task.id === overId
+				);
+				
+				if (activeIndex !== overIndex) {
+					const newOrder = arrayMove(tasksInColumn, activeIndex, overIndex);
+					
+					const newTasks = tasks.filter(
+						(task) => task.columnId !== activeColumnId
+					);
+					
+					setTasks([...newTasks, ...newOrder]);
+					
+					// Guardar el nuevo orden
+					const columnsWithTasks = columns.map(col => {
+						const columnTasks = col.id === activeColumnId 
+							? newOrder 
+							: tasks.filter(task => task.columnId === col.id);
+						
+						return {
+							id: col.id,
+							title: col.title,
+							tasks: columnTasks
+						};
+					});
+					
+					saveBoardData({ columns: columnsWithTasks });
+				}
+			}
+		}
 	}
 
 	function onDragOver(event: DragOverEvent) {
@@ -312,59 +467,36 @@ export function KanbanBoard() {
 		const activeId = active.id;
 		const overId = over.id;
 
-		if (activeId === overId) return;
-
 		if (!hasDraggableData(active) || !hasDraggableData(over)) return;
 
-		const activeData = active.data.current;
-		const overData = over.data.current;
-
-		const isActiveATask = activeData?.type === "Task";
-		const isOverATask = overData?.type === "Task";
-
-		if (!isActiveATask) return;
-
-		// Im dropping a Task over another Task
-		if (isActiveATask && isOverATask) {
-			setTasks((tasks) => {
-				const activeIndex = tasks.findIndex((t) => t.id === activeId);
-				const overIndex = tasks.findIndex((t) => t.id === overId);
-				const activeTask = tasks[activeIndex];
-				const overTask = tasks[overIndex];
-				if (
-					activeTask &&
-					overTask &&
-					activeTask.columnId !== overTask.columnId
-				) {
-					// Solo permitir mover a columnas visibles
-					const targetColumn = columns.find(col => col.id === overTask.columnId);
-					if (targetColumn && targetColumn.isVisible !== false) {
-						activeTask.columnId = overTask.columnId;
-						return arrayMove(tasks, activeIndex, overIndex - 1);
-					}
-					return tasks;
-				}
-
-				return arrayMove(tasks, activeIndex, overIndex);
-			});
-		}
-
-		const isOverAColumn = overData?.type === "Column";
-
-		// Im dropping a Task over a column
-		if (isActiveATask && isOverAColumn) {
-			setTasks((tasks) => {
-				const activeIndex = tasks.findIndex((t) => t.id === activeId);
-				const activeTask = tasks[activeIndex];
+		// Manejar cambio de tareas entre columnas
+		if (
+			active.data.current?.type === "Task" &&
+			over.data.current?.type === "Column"
+		) {
+			const activeColumnId = active.data.current.task.columnId;
+			const overColumnId = over.id;
+			
+			// Si la columna de origen es diferente a la de destino
+			if (activeColumnId !== overColumnId) {
+				// Encontramos la tarea que se está moviendo
+				const activeTask = tasks.find((task) => task.id === activeId);
+				if (!activeTask) return;
 				
-				// Solo permitir mover a columnas visibles
-				const targetColumn = columns.find(col => col.id === overId);
-				if (activeTask && targetColumn && targetColumn.isVisible !== false) {
-					activeTask.columnId = overId as ColumnId;
-					return arrayMove(tasks, activeIndex, activeIndex);
-				}
-				return tasks;
-			});
+				// Creamos la nueva tarea con el nuevo columnId
+				const updatedTask = {
+					...activeTask,
+					columnId: overColumnId as string,
+				};
+				
+				// Actualizamos el estado de tareas
+				setTasks(tasks.map(task => 
+					task.id === activeId ? updatedTask : task
+				));
+				
+				// Actualizar en el almacenamiento
+				moveTask(activeId, activeColumnId, overColumnId);
+			}
 		}
 	}
 }

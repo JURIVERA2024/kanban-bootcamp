@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Task } from "./TaskCard";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "./ui/button";
@@ -23,22 +23,51 @@ const sampleUsers = [
 // Proyectos de ejemplo
 const sampleProjects = ["Frontend", "Backend", "API", "Documentation", "DevOps"];
 
+// Componentes personalizados para ReactMarkdown
+const markdownComponents = {
+	h1: ({node, ...props}: any) => <h1 className="text-3xl font-bold py-1 my-2 border-b pb-2" {...props} />,
+	h2: ({node, ...props}: any) => <h2 className="text-2xl font-bold py-1 my-2" {...props} />,
+	h3: ({node, ...props}: any) => <h3 className="text-xl font-semibold py-1 my-1" {...props} />,
+	input: ({node, ...props}: any) => props.type === 'checkbox' ? (
+		<input type="checkbox" readOnly checked={props.checked} className="mr-1 h-4 w-4" />
+	) : (
+		<input {...props} />
+	)
+};
+
 export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDialogProps) {
-	const [title, setTitle] = useState(task.title || "");
-	const [description, setDescription] = useState(task.description || "");
-	const [priority, setPriority] = useState(task.priority || "media");
-	const [dueDate, setDueDate] = useState(task.dueDate || "");
-	const [tags, setTags] = useState(task.tags || []);
+	const [title, setTitle] = useState("");
+	const [description, setDescription] = useState("");
+	const [priority, setPriority] = useState("media");
+	const [dueDate, setDueDate] = useState("");
+	const [tags, setTags] = useState<string[]>([]);
 	const [newTag, setNewTag] = useState("");
-	const [type, setType] = useState(task.type || "feature");
-	const [project, setProject] = useState(task.project || "");
-	const [assignees, setAssignees] = useState(task.assignees || []);
+	const [type, setType] = useState<"bug" | "feature" | "improvement" | "documentation" | "question">("feature");
+	const [project, setProject] = useState("");
+	const [assignees, setAssignees] = useState<any[]>([]);
 	const [comment, setComment] = useState("");
-	const [comments, setComments] = useState(task.comments || []);
-	const [editMode, setEditMode] = useState(!task.description);
+	const [comments, setComments] = useState<any[]>([]);
+	const [editMode, setEditMode] = useState(false);
 	
 	// Establecer creador si no existe
-	const creator = task.creator || sampleUsers[0];
+	const creator = task?.creator || sampleUsers[0];
+
+	// Inicializar datos cuando se abre el diálogo
+	useEffect(() => {
+		if (open && task) {
+			setTitle(task.title || "");
+			setDescription(task.description || "");
+			setPriority(task.priority || "media");
+			setDueDate(task.dueDate || "");
+			setTags(task.tags || []);
+			setType((task.type || "feature") as "bug" | "feature" | "improvement" | "documentation" | "question");
+			setProject(task.project || "");
+			setAssignees(task.assignees || []);
+			setComments(task.comments || []);
+			// Iniciar en modo vista, no edición
+			setEditMode(false);
+		}
+	}, [open, task]);
 
 	const handleSave = () => {
 		onSave({
@@ -56,16 +85,6 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 			comments
 		});
 		onOpenChange(false);
-		setTitle("");
-		setDescription("");
-		setPriority("media");
-		setDueDate("");
-		setTags([]);
-		setType("feature");
-		setProject("");
-		setAssignees([]);
-		setComment("");
-		setComments([]);
 		setEditMode(false);
 	};
 
@@ -111,7 +130,7 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 					<div className="max-w-4xl mx-auto">
 						<div className="flex justify-between items-start mb-6">
 							<div className="flex items-center gap-2">
-								{task.id && <span className="text-gray-500">#{String(task.id).substring(0, 6)}</span>}
+								{task?.id && <span className="text-gray-500">#{String(task.id).substring(0, 6)}</span>}
 								<Dialog.Title className="text-2xl font-semibold dark:text-gray-50">
 									<input
 										className="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none py-1 text-2xl font-semibold"
@@ -160,9 +179,9 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 												placeholder="Añade una descripción detallada usando markdown..."
 											/>
 										) : (
-											<div className="prose dark:prose-invert max-w-none break-words">
+											<div className="prose dark:prose-invert max-w-none break-words p-2">
 												{description ? (
-													<ReactMarkdown>
+													<ReactMarkdown components={markdownComponents}>
 														{description}
 													</ReactMarkdown>
 												) : (
@@ -195,7 +214,7 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 														</span>
 													</div>
 													<div className="pl-8 prose dark:prose-invert max-w-none text-sm">
-														<ReactMarkdown>
+														<ReactMarkdown components={markdownComponents}>
 															{comment.content}
 														</ReactMarkdown>
 													</div>
@@ -251,17 +270,112 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 															<AvatarImage src={user.avatar} alt={user.name} />
 															<AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
 														</Avatar>
-														<span>{user.name}</span>
+														<span className="text-sm">{user.name}</span>
 													</div>
-													<input 
-														type="checkbox" 
-														checked={assignees.some(a => a.id === user.id)}
-														onChange={() => toggleAssignee(user)}
-														className="accent-blue-500"
-													/>
+													<button
+														className={`w-4 h-4 rounded-sm flex items-center justify-center ${
+															assignees.some(a => a.id === user.id)
+																? "bg-blue-500 text-white"
+																: "border border-gray-300 dark:border-gray-600"
+														}`}
+														onClick={() => toggleAssignee(user)}
+													>
+														{assignees.some(a => a.id === user.id) && (
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																width="10"
+																height="10"
+																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="3"
+																strokeLinecap="round"
+																strokeLinejoin="round"
+															>
+																<polyline points="20 6 9 17 4 12" />
+															</svg>
+														)}
+													</button>
 												</div>
 											))}
 										</div>
+									</div>
+								</div>
+
+								{/* Fecha de entrega */}
+								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
+									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+										<CalendarIcon className="h-4 w-4" />
+										Fecha de entrega
+									</div>
+									<div className="p-4">
+										<input
+											type="date"
+											className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+											value={dueDate}
+											onChange={(e) => setDueDate(e.target.value)}
+										/>
+									</div>
+								</div>
+
+								{/* Prioridad */}
+								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
+									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+										<AlertCircle className="h-4 w-4" />
+										Prioridad
+									</div>
+									<div className="p-4">
+										<select
+											className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+											value={priority}
+											onChange={(e) => setPriority(e.target.value)}
+										>
+											<option value="baja">Baja</option>
+											<option value="media">Media</option>
+											<option value="alta">Alta</option>
+											<option value="urgente">Urgente</option>
+										</select>
+									</div>
+								</div>
+
+								{/* Tipo */}
+								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
+									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+										<Package className="h-4 w-4" />
+										Tipo
+									</div>
+									<div className="p-4">
+										<select
+											className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+											value={type}
+											onChange={(e) => setType(e.target.value as "bug" | "feature" | "improvement" | "documentation" | "question")}
+										>
+											<option value="bug">🐛 Bug</option>
+											<option value="feature">✨ Funcionalidad</option>
+											<option value="improvement">⚡ Mejora</option>
+											<option value="documentation">📚 Documentación</option>
+											<option value="question">❓ Pregunta</option>
+										</select>
+									</div>
+								</div>
+
+								{/* Proyecto */}
+								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
+									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+										<GitBranch className="h-4 w-4" />
+										Proyecto
+									</div>
+									<div className="p-4">
+										<select
+											className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+											value={project}
+											onChange={(e) => setProject(e.target.value)}
+										>
+											<option value="">Seleccionar proyecto</option>
+											{sampleProjects.map(project => (
+												<option key={project} value={project}>{project}</option>
+											))}
+										</select>
 									</div>
 								</div>
 
@@ -300,96 +414,20 @@ export function EditTaskDialog({ task, onSave, open, onOpenChange }: EditTaskDia
 									</div>
 								</div>
 
-								{/* Tipo */}
-								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-										<AlertCircle className="h-4 w-4" />
-										Tipo
-									</div>
-									<div className="p-4">
-										<select
-											className="w-full p-2 text-sm border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-											value={type}
-											onChange={(e) => setType(e.target.value as any)}
-										>
-											<option value="bug">🐛 Bug</option>
-											<option value="feature">✨ Feature</option>
-											<option value="improvement">⚡ Improvement</option>
-											<option value="documentation">📚 Documentation</option>
-											<option value="question">❓ Question</option>
-										</select>
-									</div>
-								</div>
-
-								{/* Proyecto */}
-								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-										<Package className="h-4 w-4" />
-										Proyecto
-									</div>
-									<div className="p-4">
-										<select
-											className="w-full p-2 text-sm border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-											value={project}
-											onChange={(e) => setProject(e.target.value)}
-										>
-											<option value="">Ninguno</option>
-											{sampleProjects.map(proj => (
-												<option key={proj} value={proj}>{proj}</option>
-											))}
-										</select>
-									</div>
-								</div>
-
-								{/* Prioridad */}
-								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-										<AlertCircle className="h-4 w-4" />
-										Prioridad
-									</div>
-									<div className="p-4">
-										<select
-											className="w-full p-2 text-sm border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-											value={priority}
-											onChange={(e) => setPriority(e.target.value)}
-										>
-											<option value="baja">🟢 Baja</option>
-											<option value="media">🟡 Media</option>
-											<option value="alta">🟠 Alta</option>
-											<option value="urgente">🔴 Urgente</option>
-										</select>
-									</div>
-								</div>
-
-								{/* Fecha límite */}
-								<div className="border rounded-md border-gray-200 dark:border-gray-700 overflow-hidden">
-									<div className="bg-gray-50 dark:bg-gray-900 px-4 py-2 font-medium border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-										<CalendarIcon className="h-4 w-4" />
-										Fecha límite
-									</div>
-									<div className="p-4">
-										<input
-											type="date"
-											className="w-full p-2 text-sm border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-											value={dueDate}
-											onChange={(e) => setDueDate(e.target.value)}
-										/>
-									</div>
+								{/* Botones */}
+								<div className="flex justify-end space-x-2 mt-6">
+									<Button variant="outline" onClick={() => onOpenChange(false)}>
+										Cancelar
+									</Button>
+									<Button onClick={handleSave}>
+										Guardar
+									</Button>
 								</div>
 							</div>
-						</div>
-
-						<div className="mt-8 flex justify-end space-x-3 border-t dark:border-gray-700 pt-4">
-							<Button variant="outline" onClick={() => onOpenChange(false)}>
-								Cancelar
-							</Button>
-							<Button onClick={handleSave}>
-								Guardar Cambios
-							</Button>
 						</div>
 					</div>
 				</Dialog.Content>
 			</Dialog.Portal>
 		</Dialog.Root>
-    );
+	);
 }
